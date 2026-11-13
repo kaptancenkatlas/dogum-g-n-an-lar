@@ -1,4 +1,4 @@
-const GOOGLE_SCRIPT_URL = "https://google.com";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHElpAhDb5RvveOdawTGA4zYcPcuZOAtOAOPCY51h3LW_ez4VIJ9f5bSSag3lZIRzOGA/exec";
 
 function konfetiPatlat() {
     const renkler = ['#ff0a54', '#ff477e', '#ff7096', '#ff85a1', '#fbb1bd', '#ffd166', '#06d6a0', '#118ab2'];
@@ -34,18 +34,18 @@ function konfetiPatlat() {
 document.addEventListener('DOMContentLoaded', () => {
     konfetiPatlat();
 
-    const form = document.querySelector('form');
-    const isimKutusu = document.querySelector('input[type="text"]');
-    const metinKutusu = document.querySelector('textarea');
-    const dosyaKutusu = document.querySelector('input[type="file"]');
+    const form = document.getElementById('ani-formu') || document.querySelector('form');
+    const isimKutusu = document.getElementById('gonderen-adi') || document.querySelector('input[type="text"]');
+    const metinKutusu = document.getElementById('ani-mesaji') || document.querySelector('textarea');
+    const dosyaKutusu = document.getElementById('fotograf-sec') || document.querySelector('input[type="file"]');
     const secilenDosyaAdi = document.getElementById('secilen-dosya-adi');
     const durumMesaji = document.getElementById('durum-mesaji');
     const gonderBtn = document.getElementById('gonder-btn') || document.querySelector('button[type="submit"]');
 
     if (dosyaKutusu && secilenDosyaAdi) {
-        dosyaKutusu.addEventListener('change', function() {
-            const secilen = this.files.item(0);
-            secilenDosyaAdi.textContent = secilen ? "Seçilen: " + secilen.name : "Henüz fotoğraf seçilmedi";
+        dosyaKutusu.addEventListener('change', function(e) {
+            const dosyalar = e.target.files;
+            secilenDosyaAdi.textContent = (dosyalar && dosyalar.length > 0) ? "Seçilen: " + dosyalar.item(0).name : "Henüz fotoğraf seçilmedi";
         });
     }
 
@@ -62,38 +62,51 @@ document.addEventListener('DOMContentLoaded', () => {
                 gonderBtn.textContent = "Kaydediliyor, lütfen bekleyin... ⏳";
             }
 
-            const secilenDosya = dosyaKutusu ? dosyaKutusu.files.item(0) : null;
+            const secilenDosya = (dosyaKutusu && dosyaKutusu.files && dosyaKutusu.files.length > 0) ? dosyaKutusu.files.item(0) : null;
 
             if (secilenDosya) {
                 const okuyucu = new FileReader();
                 okuyucu.onload = function(event) {
-                    veriyiGonder({
-                        isim: isim,
-                        mesaj: mesaj,
-                        fotoData: event.target.result,
-                        fotoAdi: isim + "_" + secilenDosya.name
-                    });
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_GENISLIK = 800;
+                        let genislik = img.width;
+                        let yukseklik = img.height;
+
+                        if (genislik > MAX_GENISLIK) {
+                            yukseklik = Math.round((yukseklik * MAX_GENISLIK) / genislik);
+                            genislik = MAX_GENISLIK;
+                        }
+
+                        canvas.width = genislik;
+                        canvas.height = yukseklik;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, genislik, yukseklik);
+                        const kucukFoto = canvas.toDataURL('image/jpeg', 0.7);
+
+                        formVerisiGonder(isim, mesaj, kucukFoto, isim + "_ani.jpg");
+                    };
+                    img.src = event.target.result;
                 };
                 okuyucu.readAsDataURL(secilenDosya);
             } else {
-                veriyiGonder({
-                    isim: isim,
-                    mesaj: mesaj,
-                    fotoData: null,
-                    fotoAdi: null
-                });
+                formVerisiGonder(isim, mesaj, "", "");
             }
         });
     }
 
-    function veriyiGonder(paket) {
+    function formVerisiGonder(isim, mesaj, fotoData, fotoAdi) {
+        const formData = new URLSearchParams();
+        formData.append("isim", isim);
+        formData.append("mesaj", mesaj);
+        formData.append("fotoData", fotoData);
+        formData.append("fotoAdi", fotoAdi);
+
         fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
-            headers: {
-                'Content-Type': 'text/plain;charset=utf-8'
-            },
-            body: JSON.stringify(paket)
+            body: formData
         })
         .then(() => {
             form.reset();
@@ -105,12 +118,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 durumMesaji.style.padding = "12px";
                 durumMesaji.style.borderRadius = "10px";
                 durumMesaji.style.marginTop = "15px";
+                durumMesaji.style.display = "block";
                 durumMesaji.classList.remove('gizli');
-                setTimeout(() => durumMesaji.classList.add('gizli'), 5000);
             }
         })
-        .catch(() => {
-            alert("Bağlantı sırasında bir sorun oluştu, lütfen internetinizi kontrol edip tekrar deneyin.");
+        .catch((err) => {
+            alert("Gönderim hatası: " + err.message);
         })
         .finally(() => {
             if (gonderBtn) {
