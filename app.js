@@ -1,6 +1,5 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3ZjYBhG9w6sFfCOWPs7OodZKORzh_uLCp-Hrdi3CCwvwyRGX25adT-leZqEWU2gfT7w/exec";
+const GOOGLE_SCRIPT_URL = "https://google.com";
 
-// --- 1. KONFETİ PATLATMA ---
 function konfetiPatlat() {
     const renkler = ['#ff0a54', '#ff477e', '#ff7096', '#ff85a1', '#fbb1bd', '#ffd166', '#06d6a0', '#118ab2'];
     for (let i = 0; i < 120; i++) {
@@ -32,7 +31,6 @@ function konfetiPatlat() {
     }
 }
 
-// --- 2. GİZLİ GOOGLE DRIVE GÖNDERİM İŞLEMLERİ ---
 document.addEventListener('DOMContentLoaded', () => {
     konfetiPatlat();
 
@@ -44,10 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const durumMesaji = document.getElementById('durum-mesaji');
     const gonderBtn = document.getElementById('gonder-btn') || document.querySelector('button[type="submit"]');
 
-    // Fotoğraf seçildiğinde dosya adını göster
     if (dosyaKutusu && secilenDosyaAdi) {
         dosyaKutusu.addEventListener('change', function() {
-            secilenDosyaAdi.textContent = this.files.length > 0 ? "Seçilen: " + this.files.name : "Henüz fotoğraf seçilmedi";
+            const secilen = this.files.item(0);
+            secilenDosyaAdi.textContent = secilen ? "Seçilen: " + secilen.name : "Henüz fotoğraf seçilmedi";
         });
     }
 
@@ -59,24 +57,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const mesaj = metinKutusu ? metinKutusu.value.trim() : '';
             if (!mesaj) return;
 
-            // Gönderim sırasında butonu kilitle
             if (gonderBtn) {
                 gonderBtn.disabled = true;
                 gonderBtn.textContent = "Kaydediliyor, lütfen bekleyin... ⏳";
             }
 
-            if (dosyaKutusu && dosyaKutusu.files && dosyaKutusu.files.length > 0) {
-                const dosya = dosyaKutusu.files;
+            const secilenDosya = dosyaKutusu ? dosyaKutusu.files.item(0) : null;
+
+            if (secilenDosya) {
                 const okuyucu = new FileReader();
                 okuyucu.onload = function(event) {
                     veriyiGonder({
                         isim: isim,
                         mesaj: mesaj,
                         fotoData: event.target.result,
-                        fotoAdi: isim + "_" + dosya.name
+                        fotoAdi: isim + "_" + secilenDosya.name
                     });
                 };
-                okuyucu.readAsDataURL(dosya);
+                okuyucu.readAsDataURL(secilenDosya);
             } else {
                 veriyiGonder({
                     isim: isim,
@@ -93,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
             method: 'POST',
             mode: 'no-cors',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'text/plain;charset=utf-8'
             },
             body: JSON.stringify(paket)
         })
