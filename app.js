@@ -1,3 +1,6 @@
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3ZjYBhG9w6sFfCOWPs7OodZKORzh_uLCp-Hrdi3CCwvwyRGX25adT-leZqEWU2gfT7w/exec";
+
+// --- 1. KONFETİ PATLATMA ---
 function konfetiPatlat() {
     const renkler = ['#ff0a54', '#ff477e', '#ff7096', '#ff85a1', '#fbb1bd', '#ffd166', '#06d6a0', '#118ab2'];
     for (let i = 0; i < 120; i++) {
@@ -29,6 +32,7 @@ function konfetiPatlat() {
     }
 }
 
+// --- 2. GİZLİ GOOGLE DRIVE GÖNDERİM İŞLEMLERİ ---
 document.addEventListener('DOMContentLoaded', () => {
     konfetiPatlat();
 
@@ -38,77 +42,83 @@ document.addEventListener('DOMContentLoaded', () => {
     const dosyaKutusu = document.querySelector('input[type="file"]');
     const secilenDosyaAdi = document.getElementById('secilen-dosya-adi');
     const durumMesaji = document.getElementById('durum-mesaji');
-    
-    let anilarListesi = document.getElementById('anilar-listesi');
-    if (anilarListesi) anilarListesi.remove();
-    
-    anilarListesi = document.createElement('div');
-    anilarListesi.id = 'anilar-listesi';
-    anilarListesi.className = 'anilar-listesi';
-    document.body.appendChild(anilarListesi);
+    const gonderBtn = document.getElementById('gonder-btn') || document.querySelector('button[type="submit"]');
 
+    // Fotoğraf seçildiğinde dosya adını göster
     if (dosyaKutusu && secilenDosyaAdi) {
         dosyaKutusu.addEventListener('change', function() {
-            secilenDosyaAdi.textContent = this.files.length > 0 ? "Seçilen: " + this.files[0].name : "Henüz fotoğraf seçilmedi";
-        });
-    }
-
-    function anilariYukle() {
-        const kayitliAnilar = JSON.parse(localStorage.getItem('dogumGunuAnilari')) || [];
-        anilarListesi.innerHTML = '';
-
-        kayitliAnilar.forEach(ani => {
-            const kart = document.createElement('div');
-            kart.className = 'ani-karti';
-            const yazarAdi = ani.isim ? ani.isim : 'Sevgili Bir Misafir';
-            const fotoHtml = ani.foto ? `<img src="${ani.foto}" class="ani-foto">` : '';
-            
-            kart.innerHTML = `
-                <div class="ani-yazar">✍️ ${yazarAdi}</div>
-                <p class="ani-metni">"${ani.mesaj}"</p>
-                ${fotoHtml}
-                <span class="ani-tarih">${ani.tarih}</span>
-            `;
-            anilarListesi.appendChild(kart);
+            secilenDosyaAdi.textContent = this.files.length > 0 ? "Seçilen: " + this.files.name : "Henüz fotoğraf seçilmedi";
         });
     }
 
     if (form) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            const isim = isimKutusu ? isimKutusu.value.trim() : '';
+
+            const isim = isimKutusu ? isimKutusu.value.trim() : 'Belirtilmedi';
             const mesaj = metinKutusu ? metinKutusu.value.trim() : '';
             if (!mesaj) return;
 
-            const kayitliAnilar = JSON.parse(localStorage.getItem('dogumGunuAnilari')) || [];
-            const bugun = new Date().toLocaleDateString('tr-TR');
-
-            if (dosyaKutusu && dosyaKutusu.files && dosyaKutusu.files.length > 0) {
-                const okuyucu = new FileReader();
-                okuyucu.onload = function(event) {
-                    kayitliAnilar.unshift({ isim: isim, mesaj: mesaj, foto: event.target.result, tarih: bugun });
-                    localStorage.setItem('dogumGunuAnilari', JSON.stringify(kayitliAnilar));
-                    bitir();
-                };
-                okuyucu.readAsDataURL(dosyaKutusu.files[0]);
-            } else {
-                kayitliAnilar.unshift({ isim: isim, mesaj: mesaj, foto: null, tarih: bugun });
-                localStorage.setItem('dogumGunuAnilari', JSON.stringify(kayitliAnilar));
-                bitir();
+            // Gönderim sırasında butonu kilitle
+            if (gonderBtn) {
+                gonderBtn.disabled = true;
+                gonderBtn.textContent = "Kaydediliyor, lütfen bekleyin... ⏳";
             }
 
-            function bitir() {
-                form.reset();
-                if (secilenDosyaAdi) secilenDosyaAdi.textContent = "Henüz fotoğraf seçilmedi";
-                if (durumMesaji) {
-                    durumMesaji.textContent = "Anınız başarıyla eklendi! ❤️";
-                    durumMesaji.classList.remove('gizli');
-                    setTimeout(() => durumMesaji.classList.add('gizli'), 4000);
-                }
-                anilariYukle();
+            if (dosyaKutusu && dosyaKutusu.files && dosyaKutusu.files.length > 0) {
+                const dosya = dosyaKutusu.files;
+                const okuyucu = new FileReader();
+                okuyucu.onload = function(event) {
+                    veriyiGonder({
+                        isim: isim,
+                        mesaj: mesaj,
+                        fotoData: event.target.result,
+                        fotoAdi: isim + "_" + dosya.name
+                    });
+                };
+                okuyucu.readAsDataURL(dosya);
+            } else {
+                veriyiGonder({
+                    isim: isim,
+                    mesaj: mesaj,
+                    fotoData: null,
+                    fotoAdi: null
+                });
             }
         });
     }
 
-    anilariYukle();
+    function veriyiGonder(paket) {
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(paket)
+        })
+        .then(() => {
+            form.reset();
+            if (secilenDosyaAdi) secilenDosyaAdi.textContent = "Henüz fotoğraf seçilmedi";
+            if (durumMesaji) {
+                durumMesaji.textContent = "Anınız Cenk Atlas için güvenle kaydedildi! Teşekkür ederiz ❤️";
+                durumMesaji.style.color = "#155724";
+                durumMesaji.style.backgroundColor = "#d4edda";
+                durumMesaji.style.padding = "12px";
+                durumMesaji.style.borderRadius = "10px";
+                durumMesaji.style.marginTop = "15px";
+                durumMesaji.classList.remove('gizli');
+                setTimeout(() => durumMesaji.classList.add('gizli'), 5000);
+            }
+        })
+        .catch(() => {
+            alert("Bağlantı sırasında bir sorun oluştu, lütfen internetinizi kontrol edip tekrar deneyin.");
+        })
+        .finally(() => {
+            if (gonderBtn) {
+                gonderBtn.disabled = false;
+                gonderBtn.textContent = "Anıyı Gönder 💌";
+            }
+        });
+    }
 });
