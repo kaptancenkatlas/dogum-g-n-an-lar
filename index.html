@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[Oğlunuzun Adı] - Doğum Günü Anı Defteri</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="konteyner">
+        <header>
+            <h1>🎂 [Oğlunuzun Adı] İçin Bir Anı Bırak</h1>
+            <p>Yıllar sonra okuyacağı bu özel deftere dileklerini ve birlikte çekildiğiniz bir fotoğrafı ekleyebilirsin.</p>
+        </header>
+
+        <form id="ani-formu">
+            <!-- İsim Alanı -->
+            <div class="form-grubu">
+                <label for="gonderen-adi">Adınız ve Soyadınız</label>
+                <input type="text" id="gonderen-adi" placeholder="Örn: Ahmet Yılmaz (Amcası)" required>
+            </div>
+
+            <!-- Anı / Mesaj Alanı -->
+            <div class="form-grubu">
+                <label for="ani-mesaji">Anınız veya Doğum Günü Dileğiniz</label>
+                <textarea id="ani-mesaji" rows="4" placeholder="Ona gelecekte okuması için neler söylemek istersiniz?" required></textarea>
+            </div>
+
+            <!-- Fotoğraf Seçme Alanı -->
+            <div class="form-grubu">
+                <label for="fotograf-sec" class="dosya-etiketi">
+                    📷 Bir Fotoğraf Seçin (İsteğe Bağlı)
+                </label>
+                <input type="file" id="fotograf-sec" accept="image/*">
+                <span id="secilen-dosya-adi" class="dosya-bilgisi">Henüz fotoğraf seçilmedi</span>
+            </div>
+
+            <!-- Gönder Butonu -->
+            <button type="submit" id="gonder-btn" class="gonder-btn">Anıyı Gönder 💌</button>
+        </form>
+
+        <!-- Başarı veya Hata Mesajı Alanı -->
+        <div id="durum-mesaji" class="durum-mesaji gizli"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
