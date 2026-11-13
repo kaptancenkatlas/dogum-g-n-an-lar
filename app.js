@@ -1,6 +1,5 @@
-window.addEventListener('load', () => {
-    const renkler = ['#ff0a54', '#ff477e', '#ff7096', '#ff85a1', '#fbb1bd', '#f9bec7', '#ffd166', '#06d6a0', '#118ab2'];
-    
+function konfetiPatlat() {
+    const renkler = ['#ff0a54', '#ff477e', '#ff7096', '#ff85a1', '#fbb1bd', '#ffd166', '#06d6a0', '#118ab2'];
     for (let i = 0; i < 120; i++) {
         const konfeti = document.createElement('div');
         konfeti.style.position = 'fixed';
@@ -28,4 +27,88 @@ window.addEventListener('load', () => {
 
         setTimeout(() => konfeti.remove(), sure * 1000);
     }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    konfetiPatlat();
+
+    const form = document.querySelector('form');
+    const isimKutusu = document.querySelector('input[type="text"]');
+    const metinKutusu = document.querySelector('textarea');
+    const dosyaKutusu = document.querySelector('input[type="file"]');
+    const secilenDosyaAdi = document.getElementById('secilen-dosya-adi');
+    const durumMesaji = document.getElementById('durum-mesaji');
+    
+    let anilarListesi = document.getElementById('anilar-listesi');
+    if (anilarListesi) anilarListesi.remove();
+    
+    anilarListesi = document.createElement('div');
+    anilarListesi.id = 'anilar-listesi';
+    anilarListesi.className = 'anilar-listesi';
+    document.body.appendChild(anilarListesi);
+
+    if (dosyaKutusu && secilenDosyaAdi) {
+        dosyaKutusu.addEventListener('change', function() {
+            secilenDosyaAdi.textContent = this.files.length > 0 ? "Seçilen: " + this.files[0].name : "Henüz fotoğraf seçilmedi";
+        });
+    }
+
+    function anilariYukle() {
+        const kayitliAnilar = JSON.parse(localStorage.getItem('dogumGunuAnilari')) || [];
+        anilarListesi.innerHTML = '';
+
+        kayitliAnilar.forEach(ani => {
+            const kart = document.createElement('div');
+            kart.className = 'ani-karti';
+            const yazarAdi = ani.isim ? ani.isim : 'Sevgili Bir Misafir';
+            const fotoHtml = ani.foto ? `<img src="${ani.foto}" class="ani-foto">` : '';
+            
+            kart.innerHTML = `
+                <div class="ani-yazar">✍️ ${yazarAdi}</div>
+                <p class="ani-metni">"${ani.mesaj}"</p>
+                ${fotoHtml}
+                <span class="ani-tarih">${ani.tarih}</span>
+            `;
+            anilarListesi.appendChild(kart);
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const isim = isimKutusu ? isimKutusu.value.trim() : '';
+            const mesaj = metinKutusu ? metinKutusu.value.trim() : '';
+            if (!mesaj) return;
+
+            const kayitliAnilar = JSON.parse(localStorage.getItem('dogumGunuAnilari')) || [];
+            const bugun = new Date().toLocaleDateString('tr-TR');
+
+            if (dosyaKutusu && dosyaKutusu.files && dosyaKutusu.files.length > 0) {
+                const okuyucu = new FileReader();
+                okuyucu.onload = function(event) {
+                    kayitliAnilar.unshift({ isim: isim, mesaj: mesaj, foto: event.target.result, tarih: bugun });
+                    localStorage.setItem('dogumGunuAnilari', JSON.stringify(kayitliAnilar));
+                    bitir();
+                };
+                okuyucu.readAsDataURL(dosyaKutusu.files[0]);
+            } else {
+                kayitliAnilar.unshift({ isim: isim, mesaj: mesaj, foto: null, tarih: bugun });
+                localStorage.setItem('dogumGunuAnilari', JSON.stringify(kayitliAnilar));
+                bitir();
+            }
+
+            function bitir() {
+                form.reset();
+                if (secilenDosyaAdi) secilenDosyaAdi.textContent = "Henüz fotoğraf seçilmedi";
+                if (durumMesaji) {
+                    durumMesaji.textContent = "Anınız başarıyla eklendi! ❤️";
+                    durumMesaji.classList.remove('gizli');
+                    setTimeout(() => durumMesaji.classList.add('gizli'), 4000);
+                }
+                anilariYukle();
+            }
+        });
+    }
+
+    anilariYukle();
 });
