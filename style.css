@@ -133,4 +133,13 @@ input[type="file"] {
 .basarili {
     background-color: #dcfce7;
     color: #166534;
+}.profil-foto {
+    width: 350px;          /* GENİŞLİK: Sayıyı artırıp azaltarak genişliği ayarlayın */
+    height: 550px;         /* YÜKSEKLİK: Sayıyı artırıp azaltarak yüksekliği ayarlayın */
+    object-fit: cover;     /* Fotoğrafın basık veya sündürülmüş görünmesini engeller */
+    border-radius: 25px;   /* KÖŞE YUVARLAKLIĞI: 50% tam yuvarlak, 25px yumuşak köşe, 0px keskin köşe yapar */
+    border: 5px solid #ffffff; /* ÇERÇEVE: Kalınlık (5px) ve renk (#ffffff beyaz) */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25); /* Fotoğrafın arkasına derinlik gölgesi verir */
+    display: block;        /* Fotoğrafı blok haline getirir */
+    margin: 25px auto;     /* Üst-alt boşluk (25px) ve sağ-sol otomatik ortalama (auto) */
 }
