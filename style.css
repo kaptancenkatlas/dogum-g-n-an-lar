@@ -209,34 +209,35 @@ body {
     gap: 15px;
     z-index: 10;
 }
-* --- TELEFON VE TABLET UYUMLULUĞU (MOBİL GÖRÜNÜM) --- */
+/* --- TELEFON VE MOBİL EKRAN KESİN DÜZENİ --- */
 @media (max-width: 768px) {
-    body {
+    body, body > div, main, section {
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
-        padding: 20px 12px !important;
+        justify-content: flex-start !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    body {
+        padding: 15px 10px !important;
         gap: 20px !important;
     }
 
     .profil-foto {
         width: 85% !important;
-        max-width: 320px !important;
+        max-width: 300px !important;
         height: auto !important;
         margin: 10px auto !important;
     }
 
-    .container, .form-container, form {
+    form, .anilar-listesi {
         width: 100% !important;
         max-width: 100% !important;
-        box-sizing: border-box !important;
-        margin: 0 auto !important;
-    }
-
-    .anilar-listesi {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin-top: 20px !important;
     }
 }
 
